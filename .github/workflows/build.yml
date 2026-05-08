@@ -1,0 +1,39 @@
+name: ChiperOS Build & Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4  # Обновил до v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5  # Обновил до v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install PlatformIO
+      run: pip install platformio
+    
+    - name: Update Libraries
+      run: |
+        pio lib install
+        # Фикс для CC1101
+        pio pkg install -g -l "https://github.com/LSatan/SmartRC-CC1101-Driver-Lib.git"
+    
+    - name: Build Firmware
+      run: |
+        pio run -e esp32-s3-devkitc-1
+    
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4  # <-- ИСПРАВЛЕНО: было v3
+      with:
+        name: ChiperOS_v1_BETA.bin
+        path: .pio/build/esp32-s3-devkitc-1/firmware.bin
+        retention-days: 30  # Храним 30 дней
